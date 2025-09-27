@@ -50,7 +50,7 @@ st.title("📊 Multi-Exchange Candlestick Dashboard")
 with st.sidebar:
     st.header("Настройки")
     exchange_choice = st.selectbox("Биржа", ["MEXC"])
-    interval = st.selectbox("Интервал", ["1m", "5", "15m", "30m", "1h", "4h", "1d"], index=3)
+    interval = st.selectbox("Интервал", ["1m", "5m", "15m", "30m", "1h", "4h", "1d"], index=3)
     limit = st.slider("Количество свечей", 20, 200, 100)
 
 # Запуск загрузки только при нажатии кнопки (или автоматически)
