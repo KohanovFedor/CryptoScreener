@@ -6,7 +6,7 @@ import json
 def render_mini_charts(df_dict: dict, cols_per_row: int = 5):
     """
     Отображает мини-графики с помощью Lightweight Charts через HTML/JS.
-    df_dict: {symbol: DataFrame с колонками time, open, high, low, close, volume}
+    df_dict: {symbol: DataFrame с колонками open_time, open, high, low, close, volume}
     """
     symbols = list(df_dict.keys())
     if not symbols:
@@ -19,7 +19,7 @@ def render_mini_charts(df_dict: dict, cols_per_row: int = 5):
         if df.empty:
             continue
         # Lightweight Charts требует time в секундах (у вас уже так!)
-        records = df[["time", "open", "high", "low", "close", "volume"]].to_dict(orient="records")
+        records = df[["open_time", "open", "high", "low", "close", "volume"]].to_dict(orient="records")
         charts_data[symbol] = records
 
     if not charts_data:
