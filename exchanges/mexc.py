@@ -18,7 +18,7 @@ class MEXCExchange(ExchangeAPI):
                 s["symbol"] for s in data["symbols"]
                 if s["quoteAsset"] == "USDT" and s["status"] == "1"
             ]
-            return sorted(symbols)[:20]
+            return sorted(symbols)[:100]
         except Exception as e:
             print(f"Ошибка при загрузке символов MEXC: {e}")
             return ["BTC_USDT", "ETH_USDT", "SOL_USDT", "DOGE_USDT", "XRP_USDT"]
