@@ -41,44 +41,53 @@ def render_mini_charts(df_dict: dict, cols_per_row: int = 5):
                 html(chart_html, height=220, scrolling=False)
 
 def _generate_chart_html(data, width=250, height=200):
-    """Генерирует HTML+JS для одного Lightweight Chart"""
+    """Генерирует HTML+JS для одного Lightweight Chart (без TradingView!)"""
+    import json
     data_json = json.dumps(data)
     return f"""
-    <div>
-        <div id="chart" style="width:{width}px; height:{height}px;"></div>
-    </div>
-    <script type="text/javascript" src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <div id="chart" style="width:{width}px; height:{height}px; border: 1px solid #eee; border-radius: 4px;"></div>
     <script type="text/javascript">
-        // Создаём чарт
-        const chart = LightweightCharts.createChart(document.getElementById('chart'), {{
-            width: {width},
-            height: {height},
-            layout: {{
-                backgroundColor: '#ffffff',
-                textColor: '#333',
-            }},
-            grid: {{
-                vertLines: {{ color: '#f0f0f0' }},
-                horzLines: {{ color: '#f0f0f0' }},
-            }},
-            crosshair: {{ mode: LightweightCharts.CrosshairMode.Normal }},
-            priceScale: {{ borderColor: '#ccc' }},
-            timeScale: {{ borderColor: '#ccc', timeVisible: true }}
-        }});
+        // Проверяем, загружена ли библиотека
+        if (typeof LightweightCharts === 'undefined') {{
+            let script = document.createElement('script');
+            script.src = 'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js';
+            script.onload = () => {{
+                createChart_{id(data)}();
+            }};
+            document.head.appendChild(script);
+        }} else {{
+            createChart_{id(data)}();
+        }}
 
-        // Добавляем серию свечей
-        const candleSeries = chart.addCandlestickSeries({{
-            upColor: '#26a69a',
-            downColor: '#ef5350',
-            borderVisible: false,
-            wickUpColor: '#26a69a',
-            wickDownColor: '#ef5350',
-        }});
+        function createChart_{id(data)}() {{
+            const chart = LightweightCharts.createChart(document.getElementById('chart'), {{
+                width: {width},
+                height: {height},
+                layout: {{
+                    backgroundColor: '#ffffff',
+                    textColor: '#333',
+                }},
+                grid: {{
+                    vertLines: {{ color: '#f0f0f0' }},
+                    horzLines: {{ color: '#f0f0f0' }},
+                }},
+                crosshair: {{ mode: LightweightCharts.CrosshairMode.Normal }},
+                priceScale: {{ borderColor: '#ccc' }},
+                timeScale: {{ borderColor: '#ccc', timeVisible: true, tickMarkFormatter: (time, tickMarkType, locale) => {{
+                    return new Date(time * 1000).toLocaleDateString();
+                }} }}
+            }});
 
-        // Устанавливаем данные
-        candleSeries.setData({data_json});
-        
-        // Автомасштаб
-        chart.timeScale().fitContent();
+            const candleSeries = chart.addCandlestickSeries({{
+                upColor: '#26a69a',
+                downColor: '#ef5350',
+                borderVisible: false,
+                wickUpColor: '#26a69a',
+                wickDownColor: '#ef5350',
+            }});
+
+            candleSeries.setData({data_json});
+            chart.timeScale().fitContent();
+        }}
     </script>
     """
