@@ -16,7 +16,7 @@ class MEXCExchange(ExchangeAPI):
             data = response.json()
             symbols = [
                 s["symbol"] for s in data["symbols"]
-                if s["quoteAsset"] == "USDT" and s["status"] == "ENABLED"
+                if s["quoteAsset"] == "USDT" and s["status"] == "1"
             ]
             # Ограничиваем для демо (иначе слишком много)
             return sorted(symbols)[:20]  # первые 20
