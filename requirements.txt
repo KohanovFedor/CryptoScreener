@@ -1,4 +1,4 @@
 streamlit
-lightweight-charts
-requests
+streamlit_lightweight_charts_pro
 pandas
+requests

@@ -6,8 +6,16 @@ class ExchangeAPI(ABC):
     name: str
 
     @abstractmethod
-    def get_symbols(self) -> List[str]:
-        """Возвращает список торговых пар (например, ['BTC_USDT', 'ETH_USDT'])"""
+    def get_symbols_from_24hr(self, priceChangePercent: int = 3) -> List[str]:
+        """Получаем список инструментов с процентом изменений больше 3"""
+        pass
+
+    @abstractmethod
+    def get_symbols(self, firstSymbols: int = 0) -> Dict[str, int]:
+        """
+    Возвращает словарь: {символ: quotePrecision}
+    Пример: {"BTC_USDT": 8, "ETH_USDT": 6, ...}
+    """
         pass
 
     @abstractmethod

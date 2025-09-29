@@ -1,23 +1,22 @@
 import streamlit as st
-from exchanges.mexc import MEXCExchange
-from ui.charts import render_mini_charts
-import pandas as pd
 
-# === КЭШИРОВАНИЕ ДАННЫХ ===
-@st.cache_data(ttl=300)  # кэш на 5 минут
+from ui.charts import render_mini_charts
+from exchanges.mexc import MEXCExchange
+
+@st.cache_data(ttl=300)
 def fetch_exchange_data(exchange_name: str, interval: str, limit: int):
     if exchange_name == "MEXC":
         exchange = MEXCExchange()
     else:
         st.error("Неподдерживаемая биржа")
-        return {}, []
+        return {}
 
     try:
-        symbols = exchange.get_symbols()
+        symbols = exchange.get_symbols_from_24hr(1)
         st.write(f"✅ Загружено {len(symbols)} символов")
     except Exception as e:
-        st.error(f"Ошибка при загрузке списка символов: {e}")
-        return {}, []
+        st.error(f"Ошибка при загрузке списка символов: {e.with_traceback()}")
+        return {}
 
     df_dict = {}
     progress_bar = st.progress(0)
@@ -26,40 +25,32 @@ def fetch_exchange_data(exchange_name: str, interval: str, limit: int):
     for i, symbol in enumerate(symbols):
         status_text.text(f"Загрузка {symbol} ({i+1}/{len(symbols)})")
         try:
+            precision = 6
             df = exchange.get_klines(symbol, interval=interval, limit=limit)
             if not df.empty and len(df) > 1:
-                df_dict[symbol] = df
+                df_dict[symbol] = {"precision": precision, "data": df}
         except Exception as e:
             st.warning(f"Пропущен {symbol}: {e}")
         progress_bar.progress((i + 1) / len(symbols))
 
     status_text.empty()
     progress_bar.empty()
-    return df_dict, symbols
+    return df_dict
 
-# === ИНТЕРФЕЙС ===
-st.set_page_config(
-    page_title="Multi-Exchange Dashboard",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(layout="wide")
+st.title("📊 MEXC Dashboard — streamlit-lightweight-charts")
 
-st.title("📊 Multi-Exchange Candlestick Dashboard")
-
-# Боковая панель
 with st.sidebar:
-    st.header("Настройки")
-    exchange_choice = st.selectbox("Биржа", ["MEXC"])
-    interval = st.selectbox("Интервал", ["1m", "5m", "15m", "30m", "1h", "4h", "1d"], index=3)
-    limit = st.slider("Количество свечей", 20, 200, 100)
+    exchange = st.selectbox("Биржа", ["MEXC"])
+    interval = st.selectbox("Интервал", ["1m", "5m", "15m", "30m", "1h", "4h", "1d"], index=1)
+    limit = st.slider("Свечей", 20, 200, 100)
 
-# Запуск загрузки только при нажатии кнопки (или автоматически)
-if st.button("Загрузить данные") or 'df_dict' in st.session_state:
+if st.button("Загрузить графики"):
     with st.spinner("Подготовка данных..."):
-        df_dict, symbols = fetch_exchange_data(exchange_choice, interval, limit)
-
+        df_dict = fetch_exchange_data(exchange, interval, limit)
+    
     if df_dict:
-        st.subheader(f"📈 {exchange_choice} — отображено {len(df_dict)} графиков")
+        st.subheader(f"📈 {exchange} — отображено {len(df_dict)} графиков")
         render_mini_charts(df_dict, cols_per_row=5)
         st.caption("Прокручивайте вниз, чтобы увидеть все графики")
     else:
